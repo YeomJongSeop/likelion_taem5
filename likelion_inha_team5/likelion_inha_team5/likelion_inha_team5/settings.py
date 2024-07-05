@@ -35,7 +35,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    #"django.middleware.csrf.CsrfViewMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -44,6 +44,12 @@ MIDDLEWARE = [
 
 
 AUTH_USER_MODEL = 'workhol.MyUser' #추가 21:10
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    # 다른 커스텀 백엔드를 추가할 수 있습니다.
+]
+
 
 # 오류뜨는 것 같아 주석처리
 # CORS_ALLOW_ALL_ORIGINS = True # all 추가  
@@ -84,6 +90,12 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://43.200.226.225",
 ]
+
+# 브라우저를 닫아도 세션 기록 유지
+ACCOUNT_SESSION_REMEMBER = True
+
+# 세션 쿠키의 유효 기간을 1시간으로 설정
+SESSION_COOKIE_AGE = 3600
 
 ROOT_URLCONF = "likelion_inha_team5.urls"
 

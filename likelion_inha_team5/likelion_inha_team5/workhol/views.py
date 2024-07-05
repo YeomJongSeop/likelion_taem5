@@ -11,8 +11,9 @@ from rest_framework import status
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth.decorators import login_required
-
-
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 
 # 사이트 이름과 카테고리 이름 매핑
 SITE_NAME_MAPPING = {
@@ -41,6 +42,7 @@ CATEGORY_NAME_MAPPING = {
         500: '서버 오류'
     }
 )
+
 @api_view(['POST'])
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
@@ -63,21 +65,47 @@ def signup(request):
         500: '서버 오류'
     }
 )
+@csrf_exempt
 @api_view(['POST'])
 def login_view(request):
     serializer = LoginSerializer(data=request.data)
     if serializer.is_valid():
         id = serializer.validated_data.get('id')
         password = serializer.validated_data.get('password')
-        user = authenticate(request, username=id, password=password) # 7/5 다시 수정 20:38
-        if user is not None:
+
+        # 사용자 모델 가져오기
+        User = get_user_model()
+        try:
+            user = User.objects.get(id=id)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 비밀번호 검증
+        if check_password(password, user.password):
             user.last_login = timezone.now()  # 마지막 로그인 시간 갱신
             user.save()
             login(request, user)
-            return Response({"message": "로그인 성공"}, status=200)  # 로그인 성공 메시지 반환
+            return Response({"message": "로그인 성공"}, status=status.HTTP_200_OK)  # 로그인 성공 메시지 반환
         else:
-            return Response({"error"}, status=402) # 오류 확인위해 추가
-    return Response({"error": "Invalid credentials"}, status=400)
+            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# @csrf_exempt
+# @api_view(['POST'])
+# def login_view(request):
+#     serializer = LoginSerializer(data=request.data)
+#     if serializer.is_valid():
+#         id = serializer.validated_data.get('id')
+#         password = serializer.validated_data.get('password')
+#         user = authenticate(request, username=id, password=password) # 7/5 다시 수정 20:38
+#         if user is not None:
+#             user.last_login = timezone.now()  # 마지막 로그인 시간 갱신
+#             user.save()
+#             login(request, user)
+#             return Response({"message": "로그인 성공"}, status=200)  # 로그인 성공 메시지 반환
+#         else:
+#             return Response({"error"}, status=402) # 오류 확인위해 추가
+#     return Response({"error": "Invalid credentials"}, status=400)
 
 # 홈
 @swagger_auto_schema(
