@@ -76,7 +76,7 @@ def login_view(request):
             login(request, user)
             return Response({"message": "로그인 성공"}, status=200)  # 로그인 성공 메시지 반환
         else:
-            return Response({"error"}, status=403) # 오류 확인위해 추가
+            return Response({"error"}, status=402) # 오류 확인위해 추가
     return Response({"error": "Invalid credentials"}, status=400)
 
 # 홈
