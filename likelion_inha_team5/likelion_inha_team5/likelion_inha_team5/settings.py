@@ -32,9 +32,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     #"django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -42,7 +42,7 @@ MIDDLEWARE = [
 ]
 
 # 오류뜨는 것 같아 주석처리
-CORS_ALLOW_ALL_ORIGINS = True # all 추가
+#CORS_ALLOW_ALL_ORIGINS = True # all 추가
 
 
 # CORS_ALLOWED_ORIGINS = [
