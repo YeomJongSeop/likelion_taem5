@@ -82,10 +82,10 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://43.200.226.225",
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://43.200.226.225",
+# ]
 
 ROOT_URLCONF = "likelion_inha_team5.urls"
 
