@@ -14,6 +14,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+from rest_framework_simplejwt.tokens import RefreshToken
 
 # 사이트 이름과 카테고리 이름 매핑
 SITE_NAME_MAPPING = {
@@ -42,7 +43,6 @@ CATEGORY_NAME_MAPPING = {
         500: '서버 오류'
     }
 )
-
 @api_view(['POST'])
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
@@ -72,23 +72,20 @@ def login_view(request):
     if serializer.is_valid():
         id = serializer.validated_data.get('id')
         password = serializer.validated_data.get('password')
-
-        # 사용자 모델 가져오기
-        User = get_user_model()
-        try:
-            user = User.objects.get(id=id)
-        except User.DoesNotExist:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # 비밀번호 검증
-        if check_password(password, user.password):
+        user = authenticate(request, username=id, password=password) # 7/5 다시 수정 20:38
+        if user is not None:
             user.last_login = timezone.now()  # 마지막 로그인 시간 갱신
             user.save()
             login(request, user)
-            return Response({"message": "로그인 성공"}, status=status.HTTP_200_OK)  # 로그인 성공 메시지 반환
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh_token': str(refresh),
+                'access_token': str(refresh.access_token),
+            }, status=status.HTTP_200_OK)  # 로그인 성공 메시지 반환
         else:
-            return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid credentials"}, status=402)  # 오류 확인위해 추가
+    return Response({"error": "Invalid credentials"}, status=400)
+
 
 # @csrf_exempt
 # @api_view(['POST'])
@@ -97,15 +94,23 @@ def login_view(request):
 #     if serializer.is_valid():
 #         id = serializer.validated_data.get('id')
 #         password = serializer.validated_data.get('password')
-#         user = authenticate(request, username=id, password=password) # 7/5 다시 수정 20:38
-#         if user is not None:
+
+#         # 사용자 모델 가져오기
+#         User = get_user_model()
+#         try:
+#             user = User.objects.get(id=id)
+#         except User.DoesNotExist:
+#             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # 비밀번호 검증
+#         if check_password(password, user.password):
 #             user.last_login = timezone.now()  # 마지막 로그인 시간 갱신
 #             user.save()
 #             login(request, user)
-#             return Response({"message": "로그인 성공"}, status=200)  # 로그인 성공 메시지 반환
+#             return Response({"message": "로그인 성공"}, status=status.HTTP_200_OK)  # 로그인 성공 메시지 반환
 #         else:
-#             return Response({"error"}, status=402) # 오류 확인위해 추가
-#     return Response({"error": "Invalid credentials"}, status=400)
+#             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 홈
 @swagger_auto_schema(
@@ -120,7 +125,7 @@ def login_view(request):
 )
 @api_view(['GET'])
 def home(request):
-    return render(request, 'workhol/home.html')
+    return Response({'message': '홈 페이지'}, status=200)
 
 # 워킹홀리데이 사이트
 @swagger_auto_schema(
@@ -135,7 +140,7 @@ def home(request):
 )
 @api_view(['GET'])
 def workhol_site(request):
-    return render(request, 'workhol/workhol_site.html')
+    return Response({'message': '워킹홀리데이 사이트'}, status=200)
 
 # 언어학습 사이트
 @swagger_auto_schema(
@@ -150,7 +155,7 @@ def workhol_site(request):
 )
 @api_view(['GET'])
 def language_study_site(request):
-    return render(request, 'workhol/language_study_site.html')
+    return Response({'message': '언어학습 사이트'}, status=200)
 
 # 인턴 사이트
 @swagger_auto_schema(
@@ -165,7 +170,7 @@ def language_study_site(request):
 )
 @api_view(['GET'])
 def intern_site(request):
-    return render(request, 'workhol/intern_site.html')
+    return Response({'message': '인턴 사이트'}, status=200)
 
 # 게시물 생성
 @swagger_auto_schema(
@@ -224,7 +229,7 @@ def post_list(request, site_name, category_name):
     site = get_object_or_404(Site, site_name=site_name)
     category = get_object_or_404(Category, category_name=category_name)
     posts = Post.objects.filter(site=site, category=category)
-    return render(request, 'workhol/post_list.html', {'posts': posts, 'site_name': site_name, 'category_name': category_name})
+    return Response({'posts': list(posts.values()), 'site_name': site_name, 'category_name': category_name}, status=200)
 
 # 게시물 상세보기
 @swagger_auto_schema(
@@ -243,7 +248,7 @@ def post_detail(request, site_name, category_name, id):
     site = get_object_or_404(Site, site_name=site_name)
     category = get_object_or_404(Category, category_name=category_name)
     post = get_object_or_404(Post, site=site, category=category, id=id)
-    return render(request, 'workhol/post_detail.html', {'post': post})
+    return Response({'post': post}, status=200)
 
 # 게시물 수정
 @swagger_auto_schema(
@@ -408,4 +413,23 @@ def mypage(request):
             serializer.save()
             return Response({"message": "Profile updated successfully"}, status=200)
         return Response(serializer.errors, status=400)
-    return render(request, 'workhol/mypage.html', {'posts': posts, 'comments': comments})
+    return Response({'posts': list(posts.values()), 'comments': list(comments.values())}, status=200)
+
+
+
+# 각 카테고리 별 게시물 목록
+@swagger_auto_schema(
+    method="get",
+    tags=["카테고리별 게시물"],
+    operation_summary="카테고리별 게시물 목록",
+    operation_description="카테고리별게시물 목록을 가져옵니다.",
+    responses={
+        200: '카테고리별 게시물 목록 가져오기 성공',
+        500: '서버 오류'
+    }
+)
+@api_view(['GET'])
+def category_list(request, category_name):
+    category = get_object_or_404(Category, category_name=category_name)
+    posts = Post.objects.filter(category=category)
+    return Response({'posts': list(posts.values()), 'category_name': category_name}, status=200)

@@ -34,6 +34,7 @@ urlpatterns = [
     path('delcomments/<int:pk>',views.delete_comments, name='delete_comments'),
     path('upcomments/<int:pk>',views.update_comments,name = 'update_comments'),
     path('mypage/', views.mypage, name='mypage'),
+    path('<str:category_name>/', views.category_list, name='category_list'),
     
     # Swagger url
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
