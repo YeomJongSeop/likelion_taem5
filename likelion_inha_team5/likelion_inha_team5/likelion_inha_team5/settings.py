@@ -41,8 +41,12 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
+
+AUTH_USER_MODEL = 'workhol.MyUser' #추가 21:10
+
 # 오류뜨는 것 같아 주석처리
-# CORS_ALLOW_ALL_ORIGINS = True # all 추가
+# CORS_ALLOW_ALL_ORIGINS = True # all 추가  
 
 
 # CORS_ALLOWED_ORIGINS = [
