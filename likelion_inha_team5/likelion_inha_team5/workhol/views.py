@@ -43,14 +43,27 @@ CATEGORY_NAME_MAPPING = {
         500: '서버 오류'
     }
 )
+# @api_view(['POST'])
+# def signup(request):
+#     serializer = SignUpSerializer(data=request.data)
+#     if serializer.is_valid():
+#         user = serializer.save()
+#         login(request, user)  # 회원가입 후 자동으로 로그인
+#         return Response({"message": "Signup successful"}, status=201)
+#     return Response(serializer.errors, status=400)
+
 @api_view(['POST'])
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-        login(request, user)  # 회원가입 후 자동으로 로그인
-        return Response({"message": "Signup successful"}, status=201)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh_token': str(refresh),
+            'access_token': str(refresh.access_token),
+        }, status=201)
     return Response(serializer.errors, status=400)
+
 
 # 로그인
 @swagger_auto_schema(
