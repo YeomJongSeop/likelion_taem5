@@ -54,6 +54,7 @@ MIDDLEWARE = [
 # CORS_ALLOW_CREDENTIALS = True  # 자격 증명 허용
 
 CORS_ALLOW_HEADERS = ['*']
+
 # CORS_ALLOW_HEADERS = [
 #     'accept',
 #     'accept-encoding',
@@ -65,13 +66,8 @@ CORS_ALLOW_HEADERS = ['*']
 #     'x-csrftoken',
 #     'x-requested-with',
 # ]
-#아래는 오류났던 코드
-# CORS_ALLOW_HEADERS = [
-#     'authorization',
-#     'content-type',
-#     'x-csrftoken',
-#     'x-requested-with',
-# ]
+
+
 
 CORS_ALLOW_METHODS = [
     'DELETE',

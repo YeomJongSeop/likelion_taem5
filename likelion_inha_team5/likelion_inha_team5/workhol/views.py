@@ -1,11 +1,9 @@
-from django.shortcuts import render, redirect
-import json
-from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
+from django.shortcuts import render
+from django.http import HttpResponseForbidden
 from .models import *
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import login, authenticate
 from .forms import *
-from django.contrib.auth.forms import AuthenticationForm
 from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -13,8 +11,7 @@ from rest_framework import status
 from .serializers import *
 from drf_yasg.utils import swagger_auto_schema
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+
 
 
 # 사이트 이름과 카테고리 이름 매핑
@@ -50,8 +47,8 @@ def signup(request):
     if serializer.is_valid():
         user = serializer.save()
         login(request, user)  # 회원가입 후 자동으로 로그인
-        return JsonResponse({"message": "Signup successful"}, status=201)
-    return JsonResponse(serializer.errors, status=400)
+        return Response({"message": "Signup successful"}, status=201)
+    return Response(serializer.errors, status=400)
 
 # 로그인
 @swagger_auto_schema(
@@ -72,13 +69,15 @@ def login_view(request):
     if serializer.is_valid():
         id = serializer.validated_data.get('id')
         password = serializer.validated_data.get('password')
-        user = authenticate(request, id=id, password=password) # 7/5 17:11 username=id부분 id=id로 수정
+        user = authenticate(request, username=id, password=password) # 7/5 다시 수정 20:38
         if user is not None:
             user.last_login = timezone.now()  # 마지막 로그인 시간 갱신
             user.save()
             login(request, user)
-            return redirect('home')  # 로그인 후 이동할 페이지
-    return JsonResponse({"error": "Invalid credentials"}, status=400)
+            return Response({"message": "로그인 성공"}, status=200)  # 로그인 성공 메시지 반환
+        else:
+            return Response({"error"}, status=403) # 오류 확인위해 추가
+    return Response({"error": "Invalid credentials"}, status=400)
 
 # 홈
 @swagger_auto_schema(
@@ -178,8 +177,8 @@ def create_post(request, site_name, category_name):
         post = serializer.save(author=request.user, site=site, category=category, site_category=site_category)
         request.user.point += 50
         request.user.save()
-        return JsonResponse({"message": "Post created successfully"}, status=201)
-    return JsonResponse(serializer.errors, status=400)
+        return Response({"message": "Post created successfully"}, status=201)
+    return Response(serializer.errors, status=400)
 
 # 게시물 목록
 @swagger_auto_schema(
@@ -241,8 +240,8 @@ def post_update(request, site_name, category_name, id):
     serializer = PostSerializer(post, data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return JsonResponse({"message": "Post updated successfully"}, status=200)
-    return JsonResponse(serializer.errors, status=400)
+        return Response({"message": "Post updated successfully"}, status=200)
+    return Response(serializer.errors, status=400)
 
 # 게시물 삭제
 @swagger_auto_schema(
@@ -264,7 +263,7 @@ def post_delete(request, site_name, category_name, id):
         return HttpResponseForbidden("You are not allowed to delete this post")
 
     post.delete()
-    return JsonResponse({"message": "Post deleted successfully"}, status=200)
+    return Response({"message": "Post deleted successfully"}, status=200)
 
 # 좋아요 누르기 기능 추가
 @swagger_auto_schema(
@@ -283,7 +282,7 @@ def press_like(request, pk):
     post = get_object_or_404(Post, pk=pk)
     post.likes += 1  # 좋아요 수를 1 증가
     post.save()
-    return JsonResponse({'message': f'{pk}의 총 좋아요 수는 {post.likes}입니다.'}, status=status.HTTP_200_OK)
+    return Response({'message': f'{pk}의 총 좋아요 수는 {post.likes}입니다.'}, status=status.HTTP_200_OK)
 
 # 댓글 작성 기능 추가
 @swagger_auto_schema(
@@ -306,8 +305,8 @@ def create_comments(request, pk):
         comments = serializer.save(post=post, author=request.user)
         request.user.point += 10
         request.user.save()
-        return JsonResponse({"message": "Comment added successfully"}, status=201)
-    return JsonResponse(serializer.errors, status=400)
+        return Response({"message": "Comment added successfully"}, status=201)
+    return Response(serializer.errors, status=400)
 
 # 댓글 삭제 기능 추가
 @swagger_auto_schema(
@@ -329,7 +328,7 @@ def delete_comments(request, pk):
         return HttpResponseForbidden("You are not allowed to delete this comment")
 
     comments.delete()
-    return JsonResponse({"message": "Comment deleted successfully"}, status=200)
+    return Response({"message": "Comment deleted successfully"}, status=200)
 
 # 댓글 수정 기능 추가
 @swagger_auto_schema(
@@ -354,8 +353,8 @@ def update_comments(request, pk):
     serializer = CommentsSerializer(comments, data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return JsonResponse({"message": "Comment updated successfully"}, status=200)
-    return JsonResponse(serializer.errors, status=400)
+        return Response({"message": "Comment updated successfully"}, status=200)
+    return Response(serializer.errors, status=400)
 
 # 회원정보 기능 추가
 @swagger_auto_schema(
@@ -379,6 +378,6 @@ def mypage(request):
         serializer = UserProfileSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse({"message": "Profile updated successfully"}, status=200)
-        return JsonResponse(serializer.errors, status=400)
+            return Response({"message": "Profile updated successfully"}, status=200)
+        return Response(serializer.errors, status=400)
     return render(request, 'workhol/mypage.html', {'posts': posts, 'comments': comments})
