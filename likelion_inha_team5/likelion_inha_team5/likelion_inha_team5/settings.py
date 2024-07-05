@@ -35,7 +35,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -43,7 +43,7 @@ MIDDLEWARE = [
 
 
 
-AUTH_USER_MODEL = 'workhol.MyUser' #추가 21:10
+# AUTH_USER_MODEL = 'workhol.MyUser' #추가 21:10
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
@@ -86,16 +86,16 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://43.200.226.225",
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://43.200.226.225",
+# ]
 
-# 브라우저를 닫아도 세션 기록 유지
-ACCOUNT_SESSION_REMEMBER = True
+# # 브라우저를 닫아도 세션 기록 유지
+# ACCOUNT_SESSION_REMEMBER = True
 
-# 세션 쿠키의 유효 기간을 1시간으로 설정
-SESSION_COOKIE_AGE = 3600
+# # 세션 쿠키의 유효 기간을 1시간으로 설정
+# SESSION_COOKIE_AGE = 3600
 
 ROOT_URLCONF = "likelion_inha_team5.urls"
 
